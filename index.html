@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<head lang="en">
+<meta charset="utf-8">
+<title>Visualization of VMT by County</title>
+<style>
+* {
+	font-family:"Trebuchet MS","sans-serif";
+}
+</style>
+<script src="libs/jquery-3.5.1.min.js"></script>
+<script src="libs/d3.min.js"></script>
+<script src="vmt_viz.js"></script>
+</head>
+<body>
+	<h1>Visualization of VMT by County</h1>
+	<script>
+		$(document).ready(function() {
+			vmt_visualization();	
+		});	
+	</script>
+	<div id="map"></div>
+	<div id="legend"></div>
+	<br/>
+	<!--
+	<div id="button_div">
+		<input id="about_button" type="button" value="About this demo" alt="Information about  this demo"></input>
+	</div>
+	-->
+</body>
+</html>
