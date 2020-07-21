@@ -7,7 +7,7 @@ function vmt_visualization() {
 	// $('#about_button').hide();
 	// $('#about_button').click(function() { popup("about.html"); });
 
-	d3.json("json/counties-albers-10m.topo.json").then(function(json_data) {
+	d3.json("json/us_counties_48states_albers.geojson").then(function(json_data) {
 		console.log('loaded json');
 		d3.csv("csv/vmt_data.csv").then(function(csv_data) {
 			console.log('loaded csv');
@@ -16,13 +16,13 @@ function vmt_visualization() {
 	});
 }
 
-function generateMap(counties_topojson, vmt_data_csv) {	
-	var us = counties_topojson;
+function generateMap(counties_geojson, vmt_data_csv) {	
+	var counties = counties_geojson;
 	var vmt = vmt_data_csv;
 	
-	var counties = topojson.feature(us, us.objects.counties, (a, b) => a !== b && (a.id / 1000 | 0) === (b.id / 1000 | 0));
-	var states = topojson.feature(us, us.objects.states, (a, b) => a !== b);
-	var nation = topojson.feature(us, us.objects.nation);
+	// var counties = topojson.feature(us, us.objects.counties, (a, b) => a !== b && (a.id / 1000 | 0) === (b.id / 1000 | 0));
+	// var states = topojson.feature(us, us.objects.states, (a, b) => a !== b);
+	// var nation = topojson.feature(us, us.objects.nation);
 	
 	
 
@@ -40,7 +40,7 @@ function generateMap(counties_topojson, vmt_data_csv) {
 		.projection(projection);
 		
 	var map = svgContainer.selectAll("path")
-		.data(nation.features)
+		.data(counties.features)
 		.enter()
 		.append("path")
 		.attr("d", function(d, i) { return geoPath(d); })
