@@ -7,16 +7,20 @@ function vmt_visualization() {
 	// $('#about_button').hide();
 	// $('#about_button').click(function() { popup("about.html"); });
 
-	d3.json("json/us_counties_epsg4326.geojson").then(function(json_data) {
-		console.log('loaded json');
-		d3.csv("csv/vmt_data.csv").then(function(csv_data) {
-			console.log('loaded csv');
-			generateMap(json_data, csv_data);
+	d3.json("json/us_states_epsg4326.geojson").then(function(states_json_data) {
+		console.log('loaded states json');
+		d3.json("json/us_counties_epsg4326.geojson").then(function(counties_json_data) {
+			console.log('loaded counties json');
+			d3.csv("csv/vmt_data.csv").then(function(csv_data) {
+				console.log('loaded csv');
+				generateMap(states_json_data, counties_json_data, csv_data);
+			});
 		});
 	});
 }
 
-function generateMap(counties_geojson, vmt_data_csv) {	
+function generateMap(states_geojson, counties_geojson, vmt_data_csv) {	
+	var states = states_geojson;
 	var counties = counties_geojson;
 	var vmt = vmt_data_csv;
 	
@@ -24,8 +28,6 @@ function generateMap(counties_geojson, vmt_data_csv) {
 	// var states = topojson.feature(us, us.objects.states, (a, b) => a !== b);
 	// var nation = topojson.feature(us, us.objects.nation);
 	
-	
-
 	var width = 975
 		height = 610;
 		
@@ -39,22 +41,32 @@ function generateMap(counties_geojson, vmt_data_csv) {
 	var geoPath = d3.geoPath()
 		.projection(projection);
 		
-	var map = svgContainer.selectAll("path")
+	var counties_map = svgContainer.selectAll("path.county")
 		.data(counties.features)
 		.enter()
-		.append("path")
-		.attr("d", function(d, i) { return geoPath(d); })
-		.style("stroke", "black")
-		.style("stroke-width", "0.25px")
-		.style("fill", "white");
+			.append("path")
+			.attr("class", "county")
+			.attr("d", function(d, i) { return geoPath(d); })
+			.style("stroke", "black")
+			.style("stroke-width", "0.25px")
+			.style("fill", "none");
+		
+	var states_map = svgContainer.selectAll("path.state")
+		.data(states.features)
+		.enter()
+			.append("path")
+			.attr("class", "state")
+			.attr("d", function(d, i) { return geoPath(d); })
+			.style("stroke", "black")
+			.style("stroke-width", "1.5px")
+			.style("fill", "none")
+			.style("opacity", 0.5);
+		
 
 
 	//setSymbology();
 	// generateLegend(popChgScale, 'legend', 'Population Change (percent)');
 	
 	// $('#about_button').show();
-	
 
-	
-	
 } // generateMap
