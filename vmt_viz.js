@@ -7,7 +7,7 @@ function vmt_visualization() {
 	// $('#about_button').hide();
 	// $('#about_button').click(function() { popup("about.html"); });
 
-	d3.json("json/us_counties_48states_albers.geojson").then(function(json_data) {
+	d3.json("json/us_counties_epsg4326.geojson").then(function(json_data) {
 		console.log('loaded json');
 		d3.csv("csv/vmt_data.csv").then(function(csv_data) {
 			console.log('loaded csv');
