@@ -1,9 +1,9 @@
 var NO_DATA = -9999;
 
 function vmt_visualization() {
-	d3.json("json/us_states_epsg4326.geojson").then(function(states_json_data) {
+	d3.json("json/us_states_48_states_epsg4326.geojson").then(function(states_json_data) {
 		console.log('loaded states json');
-		d3.json("json/us_counties_epsg4326.geojson").then(function(counties_json_data) {
+		d3.json("json/us_counties_48_states_epsg4326.geojson").then(function(counties_json_data) {
 			console.log('loaded counties json');
 			d3.csv("csv/vmt_data.csv").then(function(csv_data) {
 				console.log('loaded csv');
