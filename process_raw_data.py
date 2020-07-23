@@ -217,9 +217,8 @@ def extract_data_for(in_fname, date_str):
 # end_def
 
 in_fn2 = out_fn1
-with open(in_fn2, newline='') as in_csvfile2:
-    reader = csv.DictReader(in_csvfile2)
-    for row in reader:
-        pass
-    # end_for
-# end_with
+for dayt in all_daytz:
+    s1 = 'Extracting data for: ' + dayt
+    print(s1)
+    extract_data_for(in_fn2, dayt)
+# end_for
