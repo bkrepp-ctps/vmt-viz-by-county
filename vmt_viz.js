@@ -16,7 +16,9 @@ var geoPath = d3.geoPath()
 //
 var counties_features;
 
-// Threshold logarithmic scale for rendering VMT data
+// Threshold logarithmic scale for rendering VMT data.
+// 5-class diverging scale, inverted, with initial 'no data' step added.
+// Range values from colorbrewer2.org: https://colorbrewer2.org/#type=diverging&scheme=Spectral&n=5
 var vmt_scale = d3.scaleThreshold()
 					.domain([0, 100000, 1000000, 10000000, 100000000, Infinity])
 					.range(['gray', "#2b83ba", "#abdda4", "#ffffbf", "#fdae61", "#d7191c"]); 
@@ -51,9 +53,9 @@ var FRAME_INTERVAL = 2000;
 
 function vmt_visualization() {
 	d3.json("json/us_states_48_states_epsg4326.geojson").then(function(states_json_data) {
-		console.log('loaded states json');
+		// console.log('loaded states json');
 		d3.json("json/us_counties_48_states_epsg4326.geojson").then(function(counties_json_data) {
-			console.log('loaded counties json');
+			// console.log('loaded counties json');
 			symbolizeMap(0);
 			generateMap(states_json_data, counties_json_data);
 			// var tid  = setTimeout(function() { symbolizeMap(0); }, 100);
@@ -137,7 +139,7 @@ function make_date_text(date) {
 function symbolizeMap(date_ix) {
 	var date_str = all_daytz[date_ix];
 	var vmt_csv_fn = "csv/vmt-" + date_str + ".csv";
-	console.log('Initiating load of ' + vmt_csv_fn);
+	// console.log('Initiating load of ' + vmt_csv_fn);
 	d3.csv(vmt_csv_fn, function(d) {
 	return {
 		fips : 	d.fips,
@@ -150,7 +152,7 @@ function symbolizeMap(date_ix) {
 		jan_avg_vmt:	+d.jan_avg_vmt
 		};
 	}).then(function(vmt) {
-		console.log('Rendering VMT data for ' + date_str + ' to map.')
+		// console.log('Rendering VMT data for ' + date_str + ' to map.')
 		var date_text = make_date_text(date_str);
 		$('#date_field').html(date_text);
 		var vmt_recs = _.sortBy(vmt, function(rec) { return rec.fips; });
