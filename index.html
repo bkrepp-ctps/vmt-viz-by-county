@@ -9,11 +9,11 @@
 <script src="vmt_viz.js"></script>
 </head>
 <body>
-	<h1>Visualization of VMT by County</h1>
-	<span>
-		<span id="app_caption_generic" class="app_caption">VMT Data for&nbsp;</span>
-		<span id="app_caption_date" class="app_caption">2020-03-01</span>
-	</span>
+	<h1 id="app_caption">Visualization of VMT by County</h1>
+	<div id="date_region">
+		<span>Data for&nbsp;</span>
+		<span id="date_field">March 1, 2020</span>
+	</div>
 	<script>
 		$(document).ready(function() {
 			vmt_visualization();	

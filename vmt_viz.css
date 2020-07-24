@@ -38,11 +38,17 @@
 	margin-bottom: 10px;
 }
 
-.app_caption {
+#app_caption {
 	font-size: 24px;
 	font-weight: bold;
+	margin-bottom: 10px;
 }
 
-#app_caption_date {
+#date_region {
+	font-size: 20px;
+	margin-bottom: 10px;
+}
+
+#date_field {
 	color: rgb(255,0,0);
 }
