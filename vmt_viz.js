@@ -1,10 +1,10 @@
 // Value to indicate no VMT data record for {date, county} in data supplied by data provider.
 var NO_DATA = -9999;
 
-// Dimensions of SVG drawing area
+// Dimensions of SVG drawing area for map
 var width = 975
 	height = 610;
-var svgContainer;
+var svgMapContainer;
 
 // Projection for GeoJSON data
 var projection = d3.geoAlbersUsa().scale(1300).translate([487.5, 305]);
@@ -20,7 +20,10 @@ var counties_features;
 var vmt_scale = d3.scaleThreshold()
 					.domain([0, 100000, 1000000, 10000000, 100000000, Infinity])
 					.range(['gray', "#2b83ba", "#abdda4", "#ffffbf", "#fdae61", "#d7191c"]); 
-	
+
+// Legend labels 
+var legend_labels = ['No Data', '100,000', '1,000,000', '10,000,000', '100,000,000', '>100,000,000' ]
+
 // Dates for which we have VMT data
 var all_daytz = [   '2020-03-01', '2020-03-02', '2020-03-03', '2020-03-04', '2020-03-05', '2020-03-06', '2020-03-07', 
                 '2020-03-08', '2020-03-09', '2020-03-10', '2020-03-11', '2020-03-12', '2020-03-13', '2020-03-14', 
@@ -60,15 +63,35 @@ function vmt_visualization() {
 
 function generateMap(states_geojson, counties_geojson) {	
 	var states_features = states_geojson.features;
-	// We sort counties by FIPS in order to make joining with VMT data simpler/easier.
+	// We sort counties by FIPS in order to make pseudo-join with VMT data faster.
 	counties_features = _.sortBy(counties_geojson.features, function(rec) { return rec.properties['fips']; });
 	
-	svgContainer = d3.select("#map").append("svg")
+	var svg_leg = d3.select('#legend_div')
+			.append("svg")
+			.attr("id", "legend_svg")
+			.attr("height", 50)
+			.attr("width", 750);
+			
+	svg_leg.append("g")
+		.attr("class", "legendQuant");
+		// .attr("transform", "translate(170,20)");
+		
+	var legend = d3.legendColor()
+		.labelFormat(d3.format(".0f"))
+		.labels(legend_labels)
+		.shapeWidth(120)
+		.orient('horizontal')
+		.scale(vmt_scale);
+		
+	svg_leg.select(".legendQuant")
+		.call(legend);
+
+	svgMapContainer = d3.select("#map").append("svg")
 		.attr("width", width)
 		.attr("height", height)
 		.style("border", "2px solid steelblue");
 
-	var counties_map = svgContainer.selectAll("path.county")
+	var counties_map = svgMapContainer.selectAll("path.county")
 		.data(counties_features)
 		.enter()
 			.append("path")
@@ -84,7 +107,7 @@ function generateMap(states_geojson, counties_geojson) {
 						return tmp; 
 					});
 		
-	var states_map = svgContainer.selectAll("path.state")
+	var states_map = svgMapContainer.selectAll("path.state")
 		.data(states_features)
 		.enter()
 			.append("path")
@@ -153,14 +176,14 @@ function symbolizeMap(date_ix) {
 		// Re-sort vmt_recs, in case any dummy recs were added:
 		vmt_recs = _.sortBy(vmt_recs, function(rec) { return rec.fips; });
 
-		svgContainer.selectAll("path.county")
-					.transition().duration(1000)
-						.style("fill", function(d,i) { 	
-							var vmt_rec, vmt, retval;
-							vmt_rec = _.find(vmt_recs, function(vmt_rec) { return vmt_rec['fips'] == d.properties['fips']; });
-							vmt = vmt_rec.county_vmt;
-							retval = vmt_scale(vmt);
-							return retval;
+		svgMapContainer.selectAll("path.county")
+						.transition().duration(1000)
+							.style("fill", function(d,i) { 	
+								var vmt_rec, vmt, retval;
+								vmt_rec = _.find(vmt_recs, function(vmt_rec) { return vmt_rec['fips'] == d.properties['fips']; });
+								vmt = vmt_rec.county_vmt;
+								retval = vmt_scale(vmt);
+								return retval;
 						});
 	}).then(function() {
 		var tid = setTimeout(
