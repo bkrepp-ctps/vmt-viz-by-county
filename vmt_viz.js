@@ -1,5 +1,5 @@
 // Value to indicate no VMT data record for {date, county} in data supplied by data provider.
-var NO_DATA = -9999;
+var NO_DATA = -300000000;
 
 // Dimensions of SVG drawing area for map
 var width = 975
@@ -22,9 +22,23 @@ var counties_features;
 var vmt_scale = d3.scaleThreshold()
 					.domain([0, 100000, 1000000, 10000000, 100000000, Infinity])
 					.range(['gray', "#2b83ba", "#abdda4", "#ffffbf", "#fdae61", "#d7191c"]); 
+// VMT Legend labels 
+var vmt_legend_labels = ['No Data', '100,000', '1,000,000', '10,000,000', '100,000,000', '>100,000,000' ]
 
-// Legend labels 
-var legend_labels = ['No Data', '100,000', '1,000,000', '10,000,000', '100,000,000', '>100,000,000' ]
+// Threshold logarithmic scale for rendering the DELTA of VMT values beween January 2020 and a given date.
+// 9-class diverging scale, inverted, with initial 'no data' step added.
+// Range values from colorbrewer2.org: https://colorbrewer2.org/#type=diverging&scheme=Spectral&n=9
+var vmt_delta_scale = d3.scaleThreshold()
+					.domain([-200000000, 
+					         -100000000, -10000000, 1000000, -1000000,
+                       	     100000, 1000000, 10000000, 100000000, Infinity])
+					.range(['gray', 
+					        '#3288bd', '#66c2a5', '#abdda4', '#e6f598', 
+							'#ffffbf', '#fee08b', '#fdae61', '#d53e4f']);
+// Delta VMT Legend labels 
+var vmt_delta_legend_labels = ['No Data', 
+							   '-100,000,000', '-10,000,000', '-1,000,000', '-100,000',
+                               '+100,000', '+1,000,000', '+10,000,000', '+100,000,000', '>+100,000,000' ]
 
 // Dates for which we have VMT data
 var all_daytz = [   '2020-03-01', '2020-03-02', '2020-03-03', '2020-03-04', '2020-03-05', '2020-03-06', '2020-03-07', 
@@ -50,20 +64,23 @@ var all_daytz = [   '2020-03-01', '2020-03-02', '2020-03-03', '2020-03-04', '202
 // One new frame of visualization is rendered every 2000 milliseconds (2 seconds).
 var FRAME_INTERVAL = 2000;
 
+// Visualization mode: 'absolute' or 'delta'.
+var mode;
 
-function vmt_visualization() {
+function vmt_visualization(mode_parm) {
+	mode = mode_parm;
 	d3.json("json/us_states_48_states_epsg4326.geojson").then(function(states_json_data) {
 		// console.log('loaded states json');
 		d3.json("json/us_counties_48_states_epsg4326.geojson").then(function(counties_json_data) {
 			// console.log('loaded counties json');
 			symbolizeMap(0);
 			generateMap(states_json_data, counties_json_data);
-			// var tid  = setTimeout(function() { symbolizeMap(0); }, 100);
 		});
 	});
 } // vmt_visualization()
 
-function generateMap(states_geojson, counties_geojson) {	
+function generateMap(states_geojson, counties_geojson) {
+	var my_scale, my_labels;
 	var states_features = states_geojson.features;
 	// We sort counties by FIPS in order to make pseudo-join with VMT data faster.
 	counties_features = _.sortBy(counties_geojson.features, function(rec) { return rec.properties['fips']; });
@@ -72,19 +89,30 @@ function generateMap(states_geojson, counties_geojson) {
 			.append("svg")
 			.attr("id", "legend_svg")
 			.attr("height", 50)
-			.attr("width", 750);
+			.attr("width", 1200); // was 750
 			
 	svg_leg.append("g")
 		.attr("class", "legendQuant");
 		// .attr("transform", "translate(170,20)");
-		
+
+	if (mode === 'absolute') {
+		my_scale = vmt_scale;
+		my_labels = vmt_legend_labels;
+	} else if (mode === 'delta') {
+		my_scale = vmt_delta_scale;
+		my_labels = vmt_delta_legend_labels;
+	}  else {
+		alert('Invalid mode: ' + mode + '. Exiting');
+		return;
+	}
+
 	var legend = d3.legendColor()
 		.labelFormat(d3.format(".0f"))
-		.labels(legend_labels)
-		.shapeWidth(120)
+		.labels(my_labels)
+		.shapeWidth(105) // was 120
 		.orient('horizontal')
-		.scale(vmt_scale);
-		
+		.scale(my_scale);
+
 	svg_leg.select(".legendQuant")
 		.call(legend);
 
@@ -119,8 +147,7 @@ function generateMap(states_geojson, counties_geojson) {
 			.style("stroke-width", "1.5px")
 			.style("fill", "none")
 			.style("opacity", 0.5);
-		
-	var _DEBUG_HOOK = 0;
+
 } // generateMap()
 
 // Utility function to map a date string in yyyy-mm-dd format
@@ -142,14 +169,15 @@ function symbolizeMap(date_ix) {
 	// console.log('Initiating load of ' + vmt_csv_fn);
 	d3.csv(vmt_csv_fn, function(d) {
 	return {
-		fips : 	d.fips,
-		fips_state:	d.fips_state,
+		fips : 			d.fips,
+		fips_state:		d.fips_state,
 		fips_county:	d.fips_county,
 		state:			d.state,
 		county:			d.county,
 		date:			d.date,
 		county_vmt:		+d.county_vmt,
-		jan_avg_vmt:	+d.jan_avg_vmt
+		jan_avg_vmt:	+d.jan_avg_vmt,
+		delta:			+d.county_vmt - +d.jan_avg_vmt	// Change in VMT w.r.t. January 2020
 		};
 	}).then(function(vmt) {
 		// console.log('Rendering VMT data for ' + date_str + ' to map.')
@@ -172,6 +200,7 @@ function symbolizeMap(date_ix) {
 				dummy_rec['date'] = date_str;
 				dummy_rec['county_vmt'] = NO_DATA;
 				dummy_rec['jan_avg_vmt'] = NO_DATA;
+				dummy_rec['delta'] = NO_DATA;
 				vmt_recs.push(dummy_rec);
 			}
 		}
@@ -181,10 +210,16 @@ function symbolizeMap(date_ix) {
 		svgMapContainer.selectAll("path.county")
 						.transition().duration(1000)
 							.style("fill", function(d,i) { 	
-								var vmt_rec, vmt, retval;
+								var vmt_rec, data_value, retval;
 								vmt_rec = _.find(vmt_recs, function(vmt_rec) { return vmt_rec['fips'] == d.properties['fips']; });
-								vmt = vmt_rec.county_vmt;
-								retval = vmt_scale(vmt);
+								if (mode === 'absolute') {
+									data_value = vmt_rec.county_vmt;
+									retval = vmt_scale(data_value);
+								} else {
+									// Here: mode must be 'delta'
+									data_value = vmt_rec.delta;
+									retval = vmt_delta_scale(data_value);
+								}
 								return retval;
 						});
 	}).then(function() {
