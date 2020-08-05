@@ -1,4 +1,5 @@
 # Script to massage raw county-by-county VMT data into a format suitable for the viz app.
+# This script is based on the format of the data delivered up to and including June 28, 2020.
 
 import csv
 
@@ -66,7 +67,8 @@ out_f1.close()
 
 # Step 2 - Extract the data from the output of Step 1 into a separate CSV file for each date.
 
-all_daytz = [   '2020-03-01', 
+all_daytz = [   
+                '2020-03-01', 
                 '2020-03-02', 
                 '2020-03-03', 
                 '2020-03-04', 
@@ -184,7 +186,9 @@ all_daytz = [   '2020-03-01',
                 '2020-06-25', 
                 '2020-06-26', 
                 '2020-06-27', 
-                '2020-06-28' ]
+                '2020-06-28' 
+                
+                ]
                 
 def extract_data_for(in_fname, date_str):
     global root_dir, out_csv_header  
