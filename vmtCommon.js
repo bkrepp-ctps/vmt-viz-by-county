@@ -5,6 +5,8 @@
 (function() {
     // Internals of the library (if any) go here
     //
+	var _projection = d3.geoAlbersUsa().scale(1300).translate([487.5, 305]);
+	
 	// *** Public API of the library begins here. ***
 	return vmtCommon = {
 		version : "1.0",
@@ -13,9 +15,9 @@
 		//
 		NO_DATA : -300000000,
 		
-		// Projection for GeoJSON data
+		// SVG GeoPath generator function, based on projection defined above
 		//
-		projection : d3.geoAlbersUsa().scale(1300).translate([487.5, 305]),
+		geoPath : d3.geoPath().projection(_projection),
 
 		// Threshold logarithmic scale for rendering VMT data.
 		// 5-class diverging scale, inverted, with initial 'no data' step added.

@@ -9,10 +9,6 @@ var width = 975
 	height = 610;
 var svgMapContainer;
 
-// SVG geo-path generator function
-var geoPath = d3.geoPath()
-	.projection(vmtCommon.projection);
-
 // GeoJson counties features - populated by generateMap, referenced by symbolizeMap
 //
 var counties_features;
@@ -145,7 +141,7 @@ function generateMap(states_geojson, counties_geojson) {
 		.enter()
 			.append("path")
 			.attr("class", "county")
-			.attr("d", function(d, i) { return geoPath(d); })
+			.attr("d", function(d, i) { return vmtCommon.geoPath(d); })
 			.style("stroke", "black")
 			.style("stroke-width", "0.25px")
 			.style("fill", "none")
@@ -161,7 +157,7 @@ function generateMap(states_geojson, counties_geojson) {
 		.enter()
 			.append("path")
 			.attr("class", "state")
-			.attr("d", function(d, i) { return geoPath(d); })
+			.attr("d", function(d, i) { return vmtCommon.geoPath(d); })
 			.style("stroke", "black")
 			.style("stroke-width", "1.5px")
 			.style("fill", "none")
