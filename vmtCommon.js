@@ -95,7 +95,7 @@
 
 		minDate_absolute 	: 'January 1, 2020',
 		minDate_delta 		: 'February 1, 2020',
-		maxDate				: 'July 28, 2020',
+		maxDate				: 'July 31, 2020',
 
 		// make_date_text: Utility function to map a date string in yyyy-mm-dd format
 		// into to one in conventional US-style textual format
