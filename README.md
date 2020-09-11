@@ -2,7 +2,7 @@
 ## Overview
 Repository for app to visualize county-by-county VMT (vehicle-miles-traveled) data.
 
-The data currently available is for the 48 contiguous states from March 1, 2020 to June 28, 2020.
+The data currently available is for the 48 contiguous states from March 1, 2020 to July 31, 2020.
 
 The page __vmt.html__ presents a day-by-day visualization of the VMT for each county.
 
