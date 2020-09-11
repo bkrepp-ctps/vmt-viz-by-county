@@ -1,90 +1,129 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>Test of jQueryUI Datepicker Control</title>
-<!-- <link rel="stylesheet" href="dataviz.css"/> -->
-<link rel="stylesheet" href="libs/jquery-ui-1.12.1/jquery-ui.css"/>
-<script src="libs/jquery.min-3.5.1.js"></script>
-<script src="libs/jquery-ui-1.12.1/jquery-ui.js"></script>
-<script src="libs/lodash.js"></script>
-<script src="libs/d3.js"></script>
-<script src="libs/d3-legend-2.25.6.js"></script>
-</head>
-<body>
-<h2>Test of jQueryUI Datepicker Control</h2>
-    <div id="options">
-        <span>
-            Select date:
-            &nbsp;&nbsp;&nbsp;
-            <input type="text" id="datepicker">
-        </span>
-    </div>
-<script>
-    // Convert a "US-style" date string into a "yyyy-mm-dd" format date string.
-    // What we can a "US-style" date string is one in jQueryUI "datepicker" format 'MM d, yy'.
-    // Note the following about the datepicker format 'MM d, yy':
-    //     MM - full text of name of month, e.g., "January"
-    //     d  - day of month, with NO leading zeros
-    //     yy - four digit (yes, FOUR-digit) year
-    // ==> There is EXACTLY one space between the month name and the day-of-month.
-    // ==> There is EXACTLY one space between the comma (',') and the year    
-    function usDateStrToAppDateStr(usDateStr) {
-        var retval, parts, moStr, dayStr, yrStr, outMo, outDay, outYr;
-        var months = {  'January'   : '01',
-                        'February'  : '02',
-                        'March'     : '03',
-                        'April'     : '04',
-                        'May'       : '05',
-                        'June'      : '06',
-                        'July'      : '07',
-                        'August'    : '08',
-                        'September' : '09',
-                        'October'   : '10',
-                        'November'  : '11',
-                        'December'  : '12'
-        }; 
-        
-        retval = '';
-        parts = usDateStr.split(' ');
-        moStr = parts[0];
-        dayStr = parts[1].replace(',','');
-        yrStr = parts[2];
-        outYr = yrStr;
-        outMo = months[moStr];
-        outDay = (+dayStr < 10) ? '0' + dayStr : dayStr;
-        retval = outYr + '-' + outMo + '-' + outDay;
-        return retval;
-    }
-    var minDate, maxDate;
-    // $('#datepicker').datepicker({ dateFormat: 'yy-mm-dd' });
-    $('#datepicker').datepicker({ dateFormat: 'MM d, yy' });
-    
-    $('#datepicker').datepicker({ showOn: "focus" });
-    /*
-    minDate = "2020-03-01",
-       maxDate = "2020-06-20";
-    */
-    minDate = "March 1, 2020";
-    maxDate = "June 20, 2020";    
-    $('#datepicker').datepicker("option", "minDate", minDate);
-    $('#datepicker').datepicker("option", "maxDate", maxDate);
-    
-    // $('#datepicker').datepicker("option", "defaultDate", '2020-03-01');
-    // $('#datepicker').datepicker( "setDate", "2020-03-01" );
-    $('#datepicker').datepicker("option", "defaultDate", minDate);
-    $('#datepicker').datepicker( "setDate", minDate );
+# Script to massage raw county-by-county VMT data into a format suitable for the viz app.
+# This script is based on the format of the data delivered after June 28, 2020.
 
-    $('#datepicker').datepicker("option", "onClose",
-    function(dateText, inst) {
-        var _DEBUG_HOOK_ = 0,
-           current_date;
-        if (dateText === "") return;
-        coolDate  = usDateStrToAppDateStr(dateText);
-        console.log(dateText + '  ==>  ' + coolDate);
-        _DEBUG_HOOK_ = 1;
-    });
+import csv
 
-</script>
-</body>
-</html>
+root_dir = r'c:/Users/ben_k/work_stuff/vmt-viz-by-county/'
+
+# Step 0
+# Load dict of January 2020 average VMT, keyed by fips.
+in_fn0 = root_dir + '/csv/county_vmt_january_average.csv'
+jan_vmt = {}
+with open(in_fn0, newline='') as in_csvfile0:
+    reader = csv.DictReader(in_csvfile0)
+    for row in reader:
+        key = row['fips']
+        value = row['jan_avg_vmt']
+        s = key + ' ' + value
+        print(s)
+        jan_vmt[key] = value
+    # end_for
+#end_with
+
+# Step 1
+# Read raw input CSV file, and produce output CSV file with standarized field names,
+# and a new 'fips' field containing the full-length FIPS code for each county.
+# Dates in the raw input data are converted into yyyy-mm-dd format.
+#
+in_fn1 = root_dir + 'csv/county_vmt_download_v3_8_3.csv'
+out_fn1 = root_dir + 'csv/vmt_data_late_july.csv'
+out_csv_header = 'fips,fips_state,fips_county,state,county,date,county_vmt\n'
+out_f1 = open(out_fn1, 'w')
+out_f1.write(out_csv_header)
+
+with open(in_fn1, newline='') as in_csvfile1:
+    reader = csv.DictReader(in_csvfile1)
+    for row in reader:
+        #
+        raw_state_fips = row['statefp']
+        state_fips = ''
+        if (len(raw_state_fips) == 1):
+            state_fips = '0' + raw_state_fips
+        else:
+            state_fips = raw_state_fips
+        # end_if
+        #
+        raw_county_fips = row['countyfp']
+        if (len(raw_county_fips) == 1):
+            county_fips = '00' + raw_county_fips
+        elif (len(raw_county_fips) == 2):
+             county_fips = '0' + raw_county_fips
+        else:
+            county_fips = raw_county_fips
+        # end_if
+        #
+        full_fips = state_fips + county_fips
+        #
+        state = row['state_name']
+        county  = row['county_name']
+        county_vmt = row['county_vmt']
+        # Convert month into yyyy-mm-dd format.
+        raw_dayte = row['ref_dt']
+        parts = raw_dayte.split('/')
+        #
+        raw_month = parts[0]
+        month = "0" + raw_month if len(raw_month) < 2 else raw_month
+        #
+        raw_day = parts[1]
+        day = "0" + raw_day if len(raw_day) < 2 else raw_day
+        #
+        year = parts[2]
+        dayte = year + '-' + month + '-' + day
+        #
+        #
+        out_str = full_fips + ',' + state_fips + ',' + county_fips + ',' + state + ',' + county + ','
+        out_str += dayte + ',' + county_vmt + '\n'
+        # outf.write(out_str)
+        out_f1.write(out_str)
+    # end_for
+# end_with
+out_f1.close()
+
+# Step 2 - Extract the data from the output of Step 1 into a separate CSV file for each date.
+
+all_daytz = [   
+                '2020-07-29', 
+                '2020-07-30',
+                '2020-07-31' 
+            ]
+     
+final_out_csv_header = 'fips,fips_state,fips_county,state,county,date,county_vmt,jan_avg_vmt\n'
+     
+def extract_data_for(in_fname, date_str):
+    global root_dir, out_csv_header  
+    out_fname = root_dir + '/csv/vmt-' + date_str + '.csv'
+    out_f = open(out_fname, 'w')
+    out_f.write(final_out_csv_header)
+    
+    with open(in_fname, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            # Debug
+            # print(row)
+            #
+            date = row['date']
+            if date == date_str:
+                # Debug
+                # s = 'date test passed; date = ' + date
+                # print(s)
+                #
+                jan_avg_vmt = jan_vmt[row['fips']]
+                
+                out_str = row['fips'] + ',' + row['fips_state'] + ',' + row['fips_county'] + ','
+                out_str += row['state'] + ',' + row['county'] + ',' + row['date'] + ','
+                out_str += row['county_vmt'] + ',' + jan_avg_vmt + '\n'
+                out_f.write(out_str)
+            # end_if
+        # end_for
+    # end_with
+    out_f.close()
+    s = 'Extraction of data for ' + date_str + ' completed.'
+    print(s)   
+# end_def
+
+in_fn2 = out_fn1
+for dayt in all_daytz:
+    s1 = 'Extracting data for: ' + dayt
+    print(s1)
+    extract_data_for(in_fn2, dayt)
+# end_for
